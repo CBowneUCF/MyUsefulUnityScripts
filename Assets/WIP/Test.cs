@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using BetterVectors;
+using AYellowpaper.SerializedCollections;
 
 public class Test : MonoBehaviour
 {
+    public SerializedDictionary<string, int> test;
+    public BetterVectors.Vector3 position = new(1, 2, 4);
+
     private void Start()
     {
         fun();

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 //This Class is a Base Template for the Singleton Design pattern.
@@ -10,38 +8,55 @@ using UnityEngine;
 public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
 {
     private static T _Instance;
-    public static T instance { get { 
-            if (_Instance == null)
-            {
-                T findAttempt = FindFirstObjectByType<T>();
-                if (findAttempt != null)
-                {
-                    findAttempt.Awake();
-                    return findAttempt;
-                } 
-                else
-                {
-                    Debug.LogWarning("There's no Singleton of that type in this scene.");
-                    return null;
-                }
-            }
-            else return _Instance; } }
-    public static T Get() => instance;
+    public static T instance => Get();
+    public static T i => Get();
+    public static T I => Get();
 
-    public static bool IsInitialized
+    public static T Get(bool createIfNone = false)
     {
-        get { return _Instance != null; }
+		if (_Instance == null)
+		{
+			T findAttempt = FindFirstObjectByType<T>();
+			if (findAttempt)
+			{
+				findAttempt.Awake();
+				return findAttempt;
+			}
+			else
+			{
+                if (createIfNone)
+                {
+					Create(new(typeof(T).ToString()));
+                    return _Instance;
+				}
+				Debug.LogWarning("There's no Singleton of that type in this scene.");
+				return null;
+			}
+		}
+		else return _Instance;
+	}
+
+    public static T Get(ref T item, bool createIfNone = false)
+    {
+        if (item == null) item = Get(createIfNone);
+        return item;
     }
 
-    /// <summary>
-    /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnAwake() instead.
-    /// </summary>
-    private void Awake()
+    public static T Get() => Get(false);
+    public static T Get(ref T item) => Get(ref item, false);
+
+    public static T GetOrCreate() => Get(true);
+    public static T GetOrCreate(ref T item) => Get(ref item, true);
+
+	/// <summary>
+	/// This is the Unity Function which runs some code necessary for Singleton Function. Use OnAwake() instead.
+	/// </summary>
+	private void Awake()
     {
-        if (_Instance != null && _Instance != this)
+        if (_Instance && _Instance != this)
         {
             Debug.LogError(
-                "Something or someone is attempting to create a second " + 
+                "Something or someone is attempting to create a second " +
                 typeof(T).ToString() +
                 ". Which is a Singleton. If you wish to reset the " +
                 typeof(T).ToString() +
@@ -54,7 +69,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
         }
         else
         {
-            _Instance = (T) this;
+            _Instance = (T)this;
             OnAwake();
             //Debug.Log(
             //    "The " +
@@ -64,7 +79,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
         }
     }
 
-    protected virtual void OnAwake(){}
+    protected virtual void OnAwake() { }
 
     /// <summary>
     /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnDestroyed() instead.
@@ -77,7 +92,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
         }
         OnDestroyed();
     }
-    protected virtual void OnDestroyed() {}
+    protected virtual void OnDestroyed() { }
 
     /// <summary>
     /// Destroys the instance of this singleton, wherever it is.
@@ -86,7 +101,7 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
     public static void Destroy(bool leaveGameObject = false)
     {
         if (instance == null) return;
-        if(!leaveGameObject)
+        if (!leaveGameObject)
         {
             MonoBehaviour.Destroy(instance.gameObject);
         }
@@ -114,7 +129,8 @@ public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
     /// <param name="replace"> Whether or not this will forcibly replace an existing instance with the new one.</param>
     public static void Create(GameObject @object, bool replace = false)
     {
-        if (!replace) if (instance != null) return;
+        if (!replace)
+            if (instance != null) return;
             else Destroy(true);
         @object.AddComponent<T>().Awake();
     }

@@ -32,11 +32,11 @@ public class SaveSystem
 }
 
 [Serializable]
-public class SaveData<T> where T : SaveData<T>
+public abstract class SaveData<T> where T : SaveData<T>
 {
 
     protected virtual string DataPath() => Application.persistentDataPath + "Saves";
-    protected virtual string FileName() => "DefaultFile";
+    protected abstract string FileName();
 
     public void Save()
     {
@@ -48,6 +48,7 @@ public class SaveData<T> where T : SaveData<T>
     public void Load()
     {
         DirectoryCheck();
+        if (!File.Exists(DataPath() + FileName())) Save();
         using StreamReader load = File.OpenText(DataPath() + "/" + FileName() + ".json");
         JsonUtility.FromJsonOverwrite(load.ReadToEnd(), this);
     }
