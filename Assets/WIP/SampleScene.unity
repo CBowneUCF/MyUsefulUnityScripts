@@ -322,7 +322,7 @@ MonoBehaviour:
   test:
     _serializedList: []
   position:
-    x: 1
+    x: 0.77
     y: 2
     z: 4
 --- !u!1660057539 &9223372036854775807

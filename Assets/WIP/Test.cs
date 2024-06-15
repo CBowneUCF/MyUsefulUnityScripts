@@ -2,24 +2,51 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using BetterVectors;
-using AYellowpaper.SerializedCollections;
+using EditorAttributes;
+
+using Stopwatch = System.Diagnostics.Stopwatch;
+using System;
 
 public class Test : MonoBehaviour
 {
-    public SerializedDictionary<string, int> test;
-    public BetterVectors.Vector3 position = new(1, 2, 4);
+
+
 
     private void Start()
     {
         fun();
     }
 
+    
     void fun()
     {
-        BetterVectors.Vector3 v1 = new();
-        BetterVectors.Vector3 v2 = new();
-        if(v1 == v2) { }
-    }
+		int time1 = UnitTest(()=> 
+		{
+			Vector3 result = Direction.upRight;
+		});
+		int time2 = UnitTest(()=> 
+		{
+
+		});
+
+
+
+		Debug.LogFormat("Addition: {0}, Aggressive {1}", time1, time2);
+
+
+	}
+
+	public int UnitTest(Action action)
+	{
+		Stopwatch time = new();
+		time.Start();
+		for (int i = 0; i < 100000000; i++)
+		{
+			action();
+		}
+		time.Stop();
+		return (int)time.ElapsedMilliseconds;
+	}
+
 
 }

@@ -59,9 +59,9 @@ public static class EasierMathExtensions
 
 public static class MonoBehaviorHelpers
 {
-	public static void LateAwake(this MonoBehaviour m, BasicDelegate result) => m.StartCoroutine(LateWakeENUM(result));
+	public static void LateAwake(this MonoBehaviour m, Delegate result) => m.StartCoroutine(LateWakeENUM(result));
 	
-	static IEnumerator LateWakeENUM(BasicDelegate result)
+	static IEnumerator LateWakeENUM(Delegate result)
 	{
 		yield return WaitFor.EndOfFrame();
 		result();
@@ -69,7 +69,7 @@ public static class MonoBehaviorHelpers
 
 	public static bool Unloading(this MonoBehaviour m) => m.gameObject.scene.isLoaded;
 
-	public static void SafeDestroyers(this MonoBehaviour m, BasicDelegate SafeDestroy, BasicDelegate UnloadDestroy)
+	public static void SafeDestroyers(this MonoBehaviour m, Delegate SafeDestroy, Delegate UnloadDestroy)
 	{
 		if (!m.gameObject.scene.isLoaded) SafeDestroy();
 		else UnloadDestroy();
@@ -82,4 +82,4 @@ public static class MonoBehaviorHelpers
 
 }
 
-public delegate void BasicDelegate();
+public delegate void Delegate();

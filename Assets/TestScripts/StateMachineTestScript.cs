@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
 using StateMachineSLS;
-using Vector3Helper;
-using TrigHelper;
 
 public class StateMachineTestScript : MonoBehaviour
 {
@@ -12,28 +10,24 @@ public class StateMachineTestScript : MonoBehaviour
     }
 
 
-    public class MyStateMachine : StateMachine
+    public class MyStateMachine : StateMachine<MyStateMachine, StateMachineTestScript>
     {
-        public MyStateMachine(MonoBehaviour owner) : base(owner) {}
 
-        public new enum State { FirstState, SecondState };
-        protected override void InitializeStates()
-        {
+		public enum States { FirstState, SecondState };
+		protected override void InitializeStates()
+		{
+			RegisterState<FirstState>();
+			RegisterState<SecondState>();
+		}
 
-            RegisterState(new FirstState(owner));
-            RegisterState(new SecondState(owner));
+		public class FirstState : StateBase
+		{
 
-        }
+		}
+		public class SecondState : StateBase
+		{
 
-        public class FirstState : StateBase
-        {
-            public FirstState(MonoBehaviour owner) : base(owner){}
-        }
-
-        public class SecondState : StateBase
-        {
-            public SecondState(MonoBehaviour owner) : base(owner){}
-        }
+		}
 
 
 
@@ -41,5 +35,5 @@ public class StateMachineTestScript : MonoBehaviour
 
 
 
-    }
+	}
 }

@@ -1,7 +1,9 @@
-﻿using System;
+﻿#if false
+
+using System;
 using UnityEngine;
 
-namespace Vector3Helper
+namespace Deprecated.Vector3Helper
 {
     public enum Vector3Type { Position, Rotation, Direction }
 
@@ -282,3 +284,4 @@ namespace Vector3Helper
 
 
 }
+#endif

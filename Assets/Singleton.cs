@@ -1,10 +1,9 @@
 using UnityEngine;
 
-//This Class is a Base Template for the Singleton Design pattern.
-//Any Class that inherets from this will be a Singleton.
-//Singletons make it impossible for a script to exist twice.
-//Useful for managers that multiples of can cause weirdness.
-
+/// <summary>
+/// A type of Behavior that can only exist once in a scene.
+/// </summary>
+/// <typeparam name="T">The Behavior's Type</typeparam>
 public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
 {
     private static T _Instance;

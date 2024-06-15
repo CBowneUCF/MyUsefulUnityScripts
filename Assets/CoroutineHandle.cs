@@ -35,9 +35,9 @@ public class Coroutine : IEnumerator
 
 
     /// <summary> An Event that is called at the beginning of the Coroutine's tasks. </summary>
-    public event System.Action<Coroutine> OnBegin;
+    public event System.Action OnBegin;
     /// <summary> An Event that is called at the end of the Coroutine's tasks. </summary>
-    public event System.Action<Coroutine> OnFinish;
+    public event System.Action OnFinish;
 
     /// <summary> The MonoBehavior that owns the Coroutine. Necessary for automatic running. (Get Only) </summary>
     public MonoBehaviour owner {get; private set;}
@@ -133,13 +133,13 @@ public class Coroutine : IEnumerator
     private bool begunRan;
     private bool finishedRan;
     private void begunRun(){if(!begunRan){
-        OnBegin?.Invoke(this);
+        OnBegin?.Invoke();
     }}
     private void finishedRun(){if(!finishedRan){
         waiting = false;
         running = false;
         complete = true;
-        OnFinish?.Invoke(this);
+        OnFinish?.Invoke();
     }}
 
 
