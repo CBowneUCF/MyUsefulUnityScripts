@@ -1,138 +1,137 @@
 using UnityEngine;
-using Vec = UnityEngine.Vector3;
 
 public static class Vec3Helper
 {
 
 	//public static V Lambda(this V v, Func<int, float, float> lambda)=> new(lambda(0, v.x), lambda(1, v.y), lambda(2, v.z));
 
-	public static void Scale(this Vec v, Vec other)
+	public static void Scale(this Vector3 v, Vector3 other)
 	{
 		v.x *= other.x;
 		v.y *= other.y;
 		v.z *= other.z;
 	}
-	public static void Scale(this Vec v, float x = 1f, float y = 1f, float z = 1f)
+	public static void Scale(this Vector3 v, float x = 1f, float y = 1f, float z = 1f)
 	{
 		v.x *= x;
 		v.y *= y;
 		v.z *= z;
 	}
-	public static void Scale(this Vec v, float all)
+	public static void Scale(this Vector3 v, float all)
 		=> v *= all;
-	public static Vec Scaled(this Vec v, Vec other)
+	public static Vector3 Scaled(this Vector3 v, Vector3 other)
 		=> new(v.x * other.x, v.y * other.y, v.z * other.z);
-	public static Vec Scaled(this Vec v, float x = 1f, float y = 1f, float z = 1f)
+	public static Vector3 Scaled(this Vector3 v, float x = 1f, float y = 1f, float z = 1f)
 		=> new(v.x * x, v.y * y, v.z * z);
-	public static Vec Scaled(this Vec v, float all)
+	public static Vector3 Scaled(this Vector3 v, float all)
 		=> new(v.x * all, v.y * all, v.z * all);
 
-	public static void Divide(this Vec v, Vec other)
+	public static void Divide(this Vector3 v, Vector3 other)
 	{
 		v.x /= other.x;
 		v.y /= other.y;
 		v.z /= other.z;
 	}
-	public static void Divide(this Vec v, float x = 1f, float y = 1f, float z = 1f)
+	public static void Divide(this Vector3 v, float x = 1f, float y = 1f, float z = 1f)
 	{
 		v.x /= x;
 		v.y /= y;
 		v.z /= z;
 	}
-	public static void Divide(this Vec v, float all)
+	public static void Divide(this Vector3 v, float all)
 		=> v /= all;
-	public static Vec Divided(this Vec v, Vec other)
+	public static Vector3 Divided(this Vector3 v, Vector3 other)
 		=> new(v.x / other.x, v.y / other.y, v.z / other.z);
-	public static Vec Divided(this Vec v, float x = 1f, float y = 1f, float z = 1f)
+	public static Vector3 Divided(this Vector3 v, float x = 1f, float y = 1f, float z = 1f)
 		=> new(v.x / x, v.y / y, v.z / z);
-	public static Vec Divided(this Vec v, float all)
+	public static Vector3 Divided(this Vector3 v, float all)
 		=> new(v.x / all, v.y / all, v.z / all);
 
-	public static Vec XY(this Vec v) => new(v.x, v.y, 0f);
-	public static Vec XZ(this Vec v) => new(v.x, 0f, v.z);
-	public static Vec YZ(this Vec v) => new(0f, v.y, v.z);
+	public static Vector3 XY(this Vector3 v) => new(v.x, v.y, 0f);
+	public static Vector3 XZ(this Vector3 v) => new(v.x, 0f, v.z);
+	public static Vector3 YZ(this Vector3 v) => new(0f, v.y, v.z);
 
-	public static void Squash(this Vec v, Vec direction)
+	public static void Squash(this Vector3 v, Vector3 direction)
 	{
 		v.x *= (1 - direction.normalized.x);
 		v.y *= (1 - direction.normalized.y);
 		v.z *= (1 - direction.normalized.z);
 	}
-	public static Vec Squashed(this Vec v, Vec direction)
+	public static Vector3 Squashed(this Vector3 v, Vector3 direction)
 		=> new (v.x * (1-direction.normalized.x), v.y * (1 - direction.normalized.y), v.z * (1 - direction.normalized.z));
 
-	public static Vec ToXZ(this Vector2 v) => new(v.x, 0, v.y);
-	public static Vector2 ZtoY(this Vec v) => new(v.x, v.z);
-	public static Vec To2(this Vector2 v) => new(v.x, v.y, 0);
-	public static Vector2 To3(this Vec v) => new(v.x, v.y);
+	public static Vector3 ToXZ(this Vector2 v) => new(v.x, 0, v.y);
+	public static Vector2 ZtoY(this Vector3 v) => new(v.x, v.z);
+	public static Vector3 To2(this Vector2 v) => new(v.x, v.y, 0);
+	public static Vector2 To3(this Vector3 v) => new(v.x, v.y);
 
-	public static void Swizzle(this Vec v)
+	public static void Swizzle(this Vector3 v)
 	{
 		float hold = v.y;
 		v.y = v.z;
 		v.z = hold;
 	}
-	public static Vec Swizzled(this Vec v)
+	public static Vector3 Swizzled(this Vector3 v)
 		=> new(v.x, v.z, v.y);
 
-	public static void Rotate(this Vec v, float amount, Vec axis)
+	public static void Rotate(this Vector3 v, float amount, Vector3 axis)
 		=> v = Quaternion.AngleAxis(amount, axis) * v;
-	public static Vec Rotated(this Vec v, float amount, Vec axis)
+	public static Vector3 Rotated(this Vector3 v, float amount, Vector3 axis)
 		=> Quaternion.AngleAxis(amount, axis) * v;
-	public static void Rotate(this Vec v, Vec eularAngle)
+	public static void Rotate(this Vector3 v, Vector3 eularAngle)
 		=> v = Quaternion.Euler(eularAngle) * v;
-	public static Vec Rotated(this Vec v, Vec eularAngle)
+	public static Vector3 Rotated(this Vector3 v, Vector3 eularAngle)
 		=> Quaternion.Euler(eularAngle) * v;
 
-	public static void RotateTo(this Vec v, Vec towards)
+	public static void RotateTo(this Vector3 v, Vector3 towards)
 		=> v = Quaternion.FromToRotation(v, towards) * v;
-	public static void RotateTo(this Vec v, Vec towards, Vec reference)
+	public static void RotateTo(this Vector3 v, Vector3 towards, Vector3 reference)
 		=> v = Quaternion.FromToRotation(reference, towards) * v;
-	public static Vec RotatedTo(this Vec v, Vec towards)
+	public static Vector3 RotatedTo(this Vector3 v, Vector3 towards)
 		=> Quaternion.FromToRotation(v, towards) * v;
-	public static Vec RotatedTo(this Vec v, Vec towards, Vec reference)
+	public static Vector3 RotatedTo(this Vector3 v, Vector3 towards, Vector3 reference)
 		=> Quaternion.FromToRotation(reference, towards) * v;
 
-	public static Vec EularRotation(this Vec v)
+	public static Vector3 EularRotation(this Vector3 v)
 		=> Quaternion.LookRotation(v.normalized).eulerAngles;
-	public static Vec EularRotation(this Vec v, Vec up)
+	public static Vector3 EularRotation(this Vector3 v, Vector3 up)
 		=> Quaternion.LookRotation(Quaternion.FromToRotation(v.normalized, up) * v).eulerAngles;
 
-	public static Vec rightTurn(this Vec v) => Quaternion.Euler(Eular.rightTurn) * v;
-	public static Vec leftTurn(this Vec v) => Quaternion.Euler(Eular.leftTurn) * v;
-	public static Vec upTurn(this Vec v) => Quaternion.Euler(Eular.upTurn) * v;
-	public static Vec downTurn(this Vec v) => Quaternion.Euler(Eular.downTurn) * v;
-	public static Vec aroundTurn(this Vec v) => Quaternion.Euler(Eular.aroundTurn) * v;
+	public static Vector3 TurnRight(this Vector3 v) => Quaternion.Euler(Vector3.up * 90) * v;
+	public static Vector3 TurnLeft(this Vector3 v) => Quaternion.Euler(Vector3.up * -90) * v;
+	public static Vector3 TurnUp(this Vector3 v) => Quaternion.Euler(Vector3.up * 180) * v;
+	public static Vector3 TurnDown(this Vector3 v) => Quaternion.Euler(Vector3.right * 90) * v;
+	public static Vector3 TurnAround(this Vector3 v) => Quaternion.Euler(Vector3.right * -90) * v;
 
-	public static Vec Randomize(this Vec v)
+	public static Vector3 Randomize(this Vector3 v)
 	{
 		v.x.Random(-1, 1);
 		v.y.Random(-1, 1);
 		v.z.Random(-1, 1);
 		return v;
 	}
-	public static Vec Randomize(this Vec v, float min, float max)
+	public static Vector3 Randomize(this Vector3 v, float min, float max)
 	{
 		v.x.Random(min, max);
 		v.y.Random(min, max);
 		v.z.Random(min, max);
 		return v;
 	}
-	public static Vec Randomize(this Vec v, Vec min, Vec max)
+	public static Vector3 Randomize(this Vector3 v, Vector3 min, Vector3 max)
 	{
 		v.x.Random(min.x, max.x);
 		v.y.Random(min.y, max.y);
 		v.z.Random(min.z, max.z);
 		return v;
 	}
-	public static Vec Randomize(this Vec v, Vec max)
+	public static Vector3 Randomize(this Vector3 v, Vector3 max)
 	{
 		v.x.Random(0, max.x);
 		v.y.Random(0, max.y);
 		v.z.Random(0, max.z);
 		return v;
 	}
-	public static Vec Randomize(this Vec v, float x, float y, float z)
+	public static Vector3 Randomize(this Vector3 v, float x, float y, float z)
 	{
 		v.x.Random(0, x);
 		v.y.Random(0, y);
@@ -141,8 +140,8 @@ public static class Vec3Helper
 	}
 
 
-	public static Vec DirToRot(this Vec value) => Quaternion.LookRotation(value.normalized).eulerAngles;
-	public static Vec RotToDir(this Vec value) => Quaternion.Euler(value) * Vec.forward;
+	public static Vector3 DirToRot(this Vector3 value) => Quaternion.LookRotation(value.normalized).eulerAngles;
+	public static Vector3 RotToDir(this Vector3 value) => Quaternion.Euler(value) * Vector3.forward;
 
 
 
@@ -151,62 +150,62 @@ public static class Vec3Helper
 
 public static class Direction
 {
-	public static Vec up => Vec.up;
-	public static Vec down => Vec.down;
-	public static Vec left => Vec.left;
-	public static Vec right => Vec.right;
-	public static Vec forward => Vec.forward;
-	public static Vec front => Vec.forward;
-	public static Vec back => Vec.back;
+	public static Vector3 up => Vector3.up;
+	public static Vector3 down => Vector3.down;
+	public static Vector3 left => Vector3.left;
+	public static Vector3 right => Vector3.right;
+	public static Vector3 forward => Vector3.forward;
+	public static Vector3 front => Vector3.forward;
+	public static Vector3 back => Vector3.back;
 
-	public static Vec one => Vec.one;
-	public static Vec zero => Vec.zero;
+	public static Vector3 one => Vector3.one;
+	public static Vector3 zero => Vector3.zero;
 
-	public static Vec two = Vec.one * 2;
-	public static Vec five = Vec.one * 5;
-	public static Vec ten = Vec.one * 10;
-	public static Vec nOne = Vec.one * -1;
+	public static Vector3 two = Vector3.one * 2;
+	public static Vector3 five = Vector3.one * 5;
+	public static Vector3 ten = Vector3.one * 10;
+	public static Vector3 nOne = Vector3.one * -1;
 
-	public static Vec inf = Vec.one * float.PositiveInfinity;
-	public static Vec nInf = Vec.one * float.NegativeInfinity;
+	public static Vector3 inf = Vector3.one * float.PositiveInfinity;
+	public static Vector3 nInf = Vector3.one * float.NegativeInfinity;
 
-	public static Vec upRight = Vec.right + Vec.up;
-	public static Vec frontRight = Vec.right + Vec.forward;
-	public static Vec downRight = Vec.right + Vec.down;
-	public static Vec backRight = Vec.right + Vec.back;
+	public static Vector3 upRight = Vector3.right + Vector3.up;
+	public static Vector3 frontRight = Vector3.right + Vector3.forward;
+	public static Vector3 downRight = Vector3.right + Vector3.down;
+	public static Vector3 backRight = Vector3.right + Vector3.back;
 
-	public static Vec upLeft = Vec.left + Vec.up;
-	public static Vec frontLeft = Vec.left + Vec.forward;
-	public static Vec downLeft = Vec.left + Vec.down;
-	public static Vec backLeft = Vec.left + Vec.back;
+	public static Vector3 upLeft = Vector3.left + Vector3.up;
+	public static Vector3 frontLeft = Vector3.left + Vector3.forward;
+	public static Vector3 downLeft = Vector3.left + Vector3.down;
+	public static Vector3 backLeft = Vector3.left + Vector3.back;
 
-	public static Vec upFront = Vec.up + Vec.forward;
-	public static Vec upBack = Vec.up + Vec.back;
-	public static Vec downFront = Vec.down + Vec.forward;
-	public static Vec downBack = Vec.down + Vec.back;
+	public static Vector3 upFront = Vector3.up + Vector3.forward;
+	public static Vector3 upBack = Vector3.up + Vector3.back;
+	public static Vector3 downFront = Vector3.down + Vector3.forward;
+	public static Vector3 downBack = Vector3.down + Vector3.back;
 
 }
 
 public static class Eular
 {
 
-	public static Vec rightTurn = new(0, 90, 0);
-	public static Vec leftTurn = new(0, -90, 0);
-	public static Vec aroundTurn = new(0, 180, 0);
-	public static Vec upTurn = new(90, 0, 0);
-	public static Vec downTurn = new(-90, 0, 0);
+	public static Vector3 rightTurn = Vector3.up * 90;
+	public static Vector3 leftTurn = Vector3.up * -90;
+	public static Vector3 aroundTurn = Vector3.up * 180;
+	public static Vector3 upTurn = Vector3.right * 90;
+	public static Vector3 downTurn = Vector3.right * -90;
 
 	public const float FullCircle = 360;
 	public const float HalfCircle = 180;
 	public const float QuarterCircle = 90;
 
-	public static void EularClamp(this Vec v, bool mirrored = false)
+	public static void EularClamp(this Vector3 v, bool mirrored = false)
 	{
 		v.x = (!mirrored) ? v.x % FullCircle : (((v.x + HalfCircle) % FullCircle) - HalfCircle);
 		v.y = (!mirrored) ? v.y % FullCircle : (((v.y + HalfCircle) % FullCircle) - HalfCircle);
 		v.z = (!mirrored) ? v.z % FullCircle : (((v.z + HalfCircle) % FullCircle) - HalfCircle);
 	}
-	public static Vec EularClamped(this Vec v, bool mirrored = false)
+	public static Vector3 EularClamped(this Vector3 v, bool mirrored = false)
 	{
 		return new(
 			(!mirrored) ? v.x % FullCircle : (((v.x + HalfCircle) % FullCircle) - HalfCircle),
@@ -214,6 +213,8 @@ public static class Eular
 			(!mirrored) ? v.z % FullCircle : (((v.z + HalfCircle) % FullCircle) - HalfCircle)
 			);
 	}
-	public static void EularClamp(this float v, bool mirrored = false) => v = (!mirrored) ? v % FullCircle : (((v + HalfCircle) % FullCircle) - HalfCircle);
-	public static float EularClamped(this float v, bool mirrored = false) => (!mirrored) ? v % FullCircle : (((v + HalfCircle) % FullCircle) - HalfCircle);
+	public static void EularClamp(this float v, bool mirrored = false)
+		=> v = (!mirrored) ? v % FullCircle : (((v + HalfCircle) % FullCircle) - HalfCircle);
+	public static float EularClamped(this float v, bool mirrored = false)
+		=> (!mirrored) ? v % FullCircle : (((v + HalfCircle) % FullCircle) - HalfCircle);
 }
