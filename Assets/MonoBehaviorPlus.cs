@@ -61,17 +61,18 @@ public class MonoBehaviorPlus : MonoBehaviour
 	protected virtual void WhenUnload() { }
 	protected virtual void WhenDestroyOrUnload() { }
 
+	//I actually have zero clue if this works. Research later.
+	protected virtual Action[] GetEventListenerList() => null;
+	protected virtual Action[] GetEventCallerList() => null;
 
 	protected virtual void EventSubscription(bool subscribing)
 	{
 		for (int i = 0; i < GetEventListenerList().Length; i++)
 		{
-			GetEventCallerList()[i] += GetEventListenerList()[i];
+			if (subscribing) GetEventCallerList()[i] += GetEventListenerList()[i];
+			else GetEventCallerList()[i] -= GetEventListenerList()[i];
 		}
 	}
-
-	protected virtual Action[] GetEventListenerList() => null;
-	protected virtual Action[] GetEventCallerList() => null;
 
 	public static bool Paused
 	{
@@ -85,10 +86,12 @@ public class MonoBehaviorPlus : MonoBehaviour
 	}
 	public static float _savedTimeScale = 1;
 
+	public bool objectEnabled => gameObject.activeSelf;
 
-
-
-
+	public void Enable() => enabled = true;
+	public void Disable() => enabled = false;
+	public void EnableObject() => gameObject.SetActive(true);
+	public void DisableObject() => gameObject.SetActive(false);
 
 
 

@@ -9,7 +9,7 @@ using UnityEngine;
 /// <typeparam name="T">The Behavior's Type</typeparam>
 public abstract class Staticon<T>
 {
-	public static bool initialized;
+	public static bool initialized { get; private set; }
 	private static T _instance;
 	public T Get()
 	{ if (!initialized) Initialize(); return _instance; }

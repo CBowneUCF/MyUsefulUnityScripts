@@ -62,8 +62,8 @@ public static class Vec3Helper
 
 	public static Vector3 ToXZ(this Vector2 v) => new(v.x, 0, v.y);
 	public static Vector2 ZtoY(this Vector3 v) => new(v.x, v.z);
-	public static Vector3 To2(this Vector2 v) => new(v.x, v.y, 0);
-	public static Vector2 To3(this Vector3 v) => new(v.x, v.y);
+	public static Vector3 To3(this Vector2 v) => new(v.x, v.y, 0);
+	public static Vector2 To2(this Vector3 v) => new(v.x, v.y);
 
 	public static void Swizzle(this Vector3 v)
 	{
