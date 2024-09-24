@@ -105,37 +105,73 @@ public static class Vec3Helper
 
 	public static Vector3 Randomize(this Vector3 v)
 	{
-		v.x.Random(-1, 1);
-		v.y.Random(-1, 1);
-		v.z.Random(-1, 1);
+		v.x = Random.Range(-1, 1);
+		v.y = Random.Range(-1, 1);
+		v.z = Random.Range(-1, 1);
 		return v;
 	}
 	public static Vector3 Randomize(this Vector3 v, float min, float max)
 	{
-		v.x.Random(min, max);
-		v.y.Random(min, max);
-		v.z.Random(min, max);
+		v.x = Random.Range(min, max);
+		v.y = Random.Range(min, max);
+		v.z = Random.Range(min, max);
 		return v;
 	}
 	public static Vector3 Randomize(this Vector3 v, Vector3 min, Vector3 max)
 	{
-		v.x.Random(min.x, max.x);
-		v.y.Random(min.y, max.y);
-		v.z.Random(min.z, max.z);
+		v.x = Random.Range(min.x, max.x);
+		v.y = Random.Range(min.y, max.y);
+		v.z = Random.Range(min.z, max.z);
 		return v;
 	}
 	public static Vector3 Randomize(this Vector3 v, Vector3 max)
 	{
-		v.x.Random(0, max.x);
-		v.y.Random(0, max.y);
-		v.z.Random(0, max.z);
+		v.x = Random.Range(0, max.x);
+		v.y = Random.Range(0, max.y);
+		v.z = Random.Range(0, max.z);
 		return v;
 	}
 	public static Vector3 Randomize(this Vector3 v, float x, float y, float z)
 	{
-		v.x.Random(0, x);
-		v.y.Random(0, y);
-		v.z.Random(0, z);
+		v.x = Random.Range(0, x);
+		v.y = Random.Range(0, y);
+		v.z = Random.Range(0, z);
+		return v;
+	}
+
+	public static Vector3Int Randomize(this Vector3Int v)
+	{
+		v.x = Random.Range(-1, 1);
+		v.y = Random.Range(-1, 1);
+		v.z = Random.Range(-1, 1);
+		return v;
+	}
+	public static Vector3Int Randomize(this Vector3Int v, int min, int max)
+	{
+		v.x = Random.Range(min, max);
+		v.y = Random.Range(min, max);
+		v.z = Random.Range(min, max);
+		return v;
+	}
+	public static Vector3Int Randomize(this Vector3Int v, Vector3Int min, Vector3Int max)
+	{
+		v.x = Random.Range(min.x, max.x);
+		v.y = Random.Range(min.y, max.y);
+		v.z = Random.Range(min.z, max.z);
+		return v;
+	}
+	public static Vector3Int Randomize(this Vector3Int v, Vector3Int max)
+	{
+		v.x = Random.Range(0, max.x);
+		v.y = Random.Range(0, max.y);
+		v.z = Random.Range(0, max.z);
+		return v;
+	}
+	public static Vector3Int Randomize(this Vector3Int v, int x, int y, int z)
+	{
+		v.x = Random.Range(0, x);
+		v.y = Random.Range(0, y);
+		v.z = Random.Range(0, z);
 		return v;
 	}
 
@@ -184,6 +220,72 @@ public static class Direction
 	public static Vector3 downFront = Vector3.down + Vector3.forward;
 	public static Vector3 downBack = Vector3.down + Vector3.back;
 
+}
+
+public static class Vector2Helper
+{
+	public static Vector2 Randomize(this Vector2 v)
+	{
+		v.x = Random.Range(-1, 1);
+		v.y = Random.Range(-1, 1);
+		return v;
+	}
+	public static Vector2 Randomize(this Vector2 v, float min, float max)
+	{
+		v.x = Random.Range(min, max);
+		v.y = Random.Range(min, max);
+		return v;
+	}
+	public static Vector2 Randomize(this Vector2 v, Vector2 min, Vector2 max)
+	{
+		v.x = Random.Range(min.x, max.x);
+		v.y = Random.Range(min.y, max.y);
+		return v;
+	}
+	public static Vector2 Randomize(this Vector2 v, Vector2 max)
+	{
+		v.x = Random.Range(0, max.x);
+		v.y = Random.Range(0, max.y);
+		return v;
+	}
+	public static Vector2 Randomize(this Vector2 v, float x, float y, float z)
+	{
+		v.x = Random.Range(0, x);
+		v.y = Random.Range(0, y);
+		return v;
+	}
+
+	public static Vector2Int Randomize(this Vector2Int v)
+	{
+		v.x = Random.Range(-1, 1);
+		v.y = Random.Range(-1, 1);
+		return v;
+	}
+	public static Vector2Int Randomize(this Vector2Int v, int min, int max)
+	{
+		v.x = Random.Range(min, max);
+		v.y = Random.Range(min, max);
+		return v;
+	}
+	public static Vector2Int Randomize(this Vector2Int v, Vector2Int min, Vector2Int max)
+	{
+		v.x = Random.Range(min.x, max.x);
+		v.y = Random.Range(min.y, max.y);
+		return v;
+	}
+	public static Vector2Int Randomize(this Vector2Int v, Vector2Int max)
+	{
+		v.x = Random.Range(0, max.x);
+		v.y = Random.Range(0, max.y);
+		return v;
+	}
+	public static Vector2Int Randomize(this Vector2Int v, int x, int y, int z)
+	{
+		v.x = Random.Range(0, x);
+		v.y = Random.Range(0, y);
+		return v;
+	}
+						 
 }
 
 public static class Eular

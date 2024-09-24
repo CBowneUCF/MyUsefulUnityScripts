@@ -3,9 +3,12 @@ using UnityEngine;
 
 public class GlobalAudioCaller : Singleton<GlobalAudioCaller>
 {
-	public new static GlobalAudioCaller Get() => GetOrCreate();
-	public new static GlobalAudioCaller Get(ref GlobalAudioCaller item) => GetOrCreate(ref item);
-
+	public new static GlobalAudioCaller Get() => InitCreate();
+	public new static bool TryGet(out GlobalAudioCaller output)
+	{
+		output = Get();
+		return output != null;
+	}
 
 	private AudioSource source;
 	private bool initialized;

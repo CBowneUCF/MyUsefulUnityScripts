@@ -319,12 +319,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 249b7e0ce359da9458721074d0d3420e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  test:
-    _serializedList: []
-  position:
-    x: 0.77
-    y: 2
-    z: 4
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

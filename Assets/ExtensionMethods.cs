@@ -50,10 +50,16 @@ public static class EasierMathExtensions
 	public static float Abs(this float value) => Mathf.Abs(value);
 	public static float Repeat(this float value, float length) => Mathf.Repeat(value, length);
 
-	public static float Random(this float value, float min, float max) => UnityEngine.Random.Range(min, max);
-	public static float Random(this float value, Vector2 input) => UnityEngine.Random.Range(input.x, input.y);
-	public static int Random(this int value, int min, int max) => UnityEngine.Random.Range(min, max);
-	public static int Random(this int value, Vector2Int input) => UnityEngine.Random.Range(input.x, input.y);
+
+	public static float Randomize(this float value, float min, float max) { value = UnityEngine.Random.Range(min, max); return value; }
+	public static int Randomize(this int value, int min, int max) { value = UnityEngine.Random.Range(min, max); return value; }
+
+	public static float RandomFrom(this float value, float min = 0) => UnityEngine.Random.Range(min, value);
+	public static int RandomFrom(this int value, int min = 0) => UnityEngine.Random.Range(min, value);
+
+	public static float RandomFrom(this Vector2 input) => UnityEngine.Random.Range(input.x, input.y);
+	public static int RandomFrom(this Vector2Int input) => UnityEngine.Random.Range(input.x, input.y);
+
 
 }
 
@@ -75,9 +81,25 @@ public static class MonoBehaviorHelpers
 		else UnloadDestroy();
 	}
 
+	public static void Set(this Transform T, Vector3? pos = null, Vector3? rot = null, Vector3? scale = null, Transform parent = null)
+	{
+		if(pos != null) T.localPosition = pos.Value;
+		if(rot != null) T.localEulerAngles = rot.Value;
+		if(scale != null) T.localPosition = scale.Value;
+		if (parent != null) T.parent = parent;
+	}
 
+	public static GameObject NewGameObject(this Object O, string name = "NewGameObject", Vector3? pos = null, Quaternion? rot = null, Vector3? scale = null, Transform parent = null, params System.Type[] additions)
+	{
+		GameObject result = new(name, additions);
 
+		if (parent != null) result.transform.parent = parent;
+		if (pos != null) result.transform.localPosition = pos.Value;
+		if (rot != null) result.transform.localRotation = rot.Value;
+		if (scale != null) result.transform.localPosition = scale.Value;
 
+		return result;
+	}
 
 
 }

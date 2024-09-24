@@ -7,7 +7,6 @@ public class AudioCaller : MonoBehaviour
 	public AudioCaller remote;
 
 	private AudioSource source;
-	private GlobalAudioCaller global;
 	private bool initialized;
 
 	private void Awake() => Initialize();
@@ -80,7 +79,7 @@ public class AudioCaller : MonoBehaviour
 		if (remote) { remote.PlaySound(name, volume, warn); return; }
 
 		if (GetClip(out AudioClip clip, name, warn))
-			GlobalAudioCaller.Get(ref global).PlaySound(clip, volume);
+			GlobalAudioCaller.Get().PlaySound(clip, volume);
 	}
 	/// <summary>
 	/// Plays a Sound using the Global Audio Caller. (Not affected by 3D Space.)

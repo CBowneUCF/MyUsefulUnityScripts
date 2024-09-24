@@ -7,19 +7,19 @@ using UnityEngine;
 /// The Staticon will be initialized the first time it is referenced by any script, and exist until the program ends.
 /// </summary>
 /// <typeparam name="T">The Behavior's Type</typeparam>
-public abstract class Staticon<T>
+public abstract class Staticon<T> where T : Staticon<T>
 {
 	public static bool initialized { get; private set; }
 	private static T _instance;
-	public T Get()
+	public static T Get()
 	{ if (!initialized) Initialize(); return _instance; }
-	public T I => Get();
+	public static T I => Get();
 
-	public void Initialize()
+	public static void Initialize()
 	{
-		if(initialized) return;
+		if (initialized) return;
 		_instance = Activator.CreateInstance<T>();
-		Awake();
+		_instance.Awake();
 		initialized = true;
 	}
 

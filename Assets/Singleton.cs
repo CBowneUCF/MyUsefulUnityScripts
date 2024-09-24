@@ -1,3 +1,8 @@
+//#define HasAddressables
+
+using System;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -6,132 +11,194 @@ using UnityEngine;
 /// <typeparam name="T">The Behavior's Type</typeparam>
 public abstract class Singleton<T> : MonoBehaviour where T : Singleton<T>
 {
-    private static T _Instance;
-    public static T instance => Get();
-    public static T i => Get();
-    public static T I => Get();
+	private static T _instance;
 
-    public static T Get(bool createIfNone = false)
-    {
-		if (_Instance == null)
+	public static T instance => Get();
+	public static T I => Get();
+
+	public static T Get() => InitFind();
+
+
+	protected static bool AttemptFind(out T result)
+	{
+		T findAttempt = FindFirstObjectByType<T>();
+		if (findAttempt)
 		{
-			T findAttempt = FindFirstObjectByType<T>();
-			if (findAttempt)
-			{
-				findAttempt.Awake();
-				return findAttempt;
-			}
-			else
-			{
-                if (createIfNone)
-                {
-					Create(new(typeof(T).ToString()));
-                    return _Instance;
-				}
-				Debug.LogWarning("There's no Singleton of that type in this scene.");
-				return null;
-			}
+			result = findAttempt;
+			_instance = result;
+
+			_instance.Awake();
+			return true;
 		}
-		else return _Instance;
+		else
+		{
+			result = null;
+			return false;
+		}
 	}
 
-    public static T Get(ref T item, bool createIfNone = false)
-    {
-        if (item == null) item = Get(createIfNone);
-        return item;
-    }
+	protected static T InitFind()
+	{
+		if (_instance != null) return _instance;
+		if (AttemptFind(out T attempt)) return attempt;
 
-    public static T Get() => Get(false);
-    public static T Get(ref T item) => Get(ref item, false);
+		Debug.LogError("No Singleton of type" + nameof(T) + "could be found.");
+		return null;
+	}
 
-    public static T GetOrCreate() => Get(true);
-    public static T GetOrCreate(ref T item) => Get(ref item, true);
+	protected static T InitCreate(bool dontDestroyOnLoad = false, string name = null)
+	{
+		if (_instance != null) return _instance;
+		if (AttemptFind(out T attempt)) return attempt;
+
+		GameObject GO = new(name ?? typeof(T).ToString());
+		T result = GO.AddComponent<T>();
+		_instance = result;
+		if (dontDestroyOnLoad) DontDestroyOnLoad(result.gameObject);
+
+		_instance.Awake();
+		return result;
+	}
+
+#if HasAddressables
+	protected static T InitInstantiate(string path)
+	{
+		if (_instance != null) return _instance;
+		if (AttemptFind(out T attempt)) return attempt;
+
+		GameObject result = Instantiate(UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(path).WaitForCompletion());
+		_instance = result.GetComponent<T>();
+
+		_instance.Awake();
+		return _instance;
+	}
+#endif
+
+	public static bool TryGet(out T output)
+	{
+		output = Get();
+		return output != null;
+	}
+
 
 	/// <summary>
 	/// This is the Unity Function which runs some code necessary for Singleton Function. Use OnAwake() instead.
 	/// </summary>
-	private void Awake()
-    {
-        if (_Instance && _Instance != this)
-        {
-            Debug.LogError(
-                "Something or someone is attempting to create a second " +
-                typeof(T).ToString() +
-                ". Which is a Singleton. If you wish to reset the " +
-                typeof(T).ToString() +
-                ", destroy the first before instantiating its replacement. The duplicate " +
-                typeof(T).ToString() +
-                " will now be Deleted."
-                );
+	public void Awake()
+	{
+		if (_instance && _instance != this)
+		{
+			Debug.LogError(
+				"Something or someone is attempting to create a second " +
+				typeof(T).ToString() +
+				". Which is a Singleton. If you wish to reset the " +
+				typeof(T).ToString() +
+				", destroy the first before instantiating its replacement. The duplicate " +
+				typeof(T).ToString() +
+				" will now be Deleted."
+				);
 
-            Object.Destroy(this);
-        }
-        else
-        {
-            _Instance = (T)this;
-            OnAwake();
-            //Debug.Log(
-            //    "The " +
-            //    typeof(T).ToString() +
-            //    " Singleton has been successfully Created/Reset."
-            //    );
-        }
-    }
+			Destroy(this);
+		}
+		else
+		{
+			_instance = (T)this;
+			OnAwake();
+			//Debug.Log(
+			//    "The " +
+			//    typeof(T).ToString() +
+			//    " Singleton has been successfully Created/Reset."
+			//    );
+		}
+	}
 
-    protected virtual void OnAwake() { }
+	protected virtual void OnAwake() { }
 
-    /// <summary>
-    /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnDestroyed() instead.
-    /// </summary>
-    private void OnDestroy()
-    {
-        if (_Instance == this)
-        {
-            _Instance = null;
-        }
-        OnDestroyed();
-    }
-    protected virtual void OnDestroyed() { }
+	/// <summary>
+	/// This is the Unity Function which runs some code necessary for Singleton Function. Use OnDestroyed() instead.
+	/// </summary>
+	private void OnDestroy()
+	{
+		if (_instance == this)
+		{
+			_instance = null;
+		}
+		OnDestroyed();
+	}
+	protected virtual void OnDestroyed() { }
 
-    /// <summary>
-    /// Destroys the instance of this singleton, wherever it is.
-    /// </summary>
-    /// <param name="leaveGameObject"> Whether the Game Object that contains the Singleton is left behind.</param>
-    public static void Destroy(bool leaveGameObject = false)
-    {
-        if (instance == null) return;
-        if (!leaveGameObject)
-        {
-            MonoBehaviour.Destroy(instance.gameObject);
-        }
-        else
-        {
-            Object.Destroy(instance);
-            instance.OnDestroy();
-        }
-    }
+	/// <summary>
+	/// Destroys the instance of this singleton, wherever it is.
+	/// </summary>
+	/// <param name="leaveGameObject"> Whether the Game Object that contains the Singleton is left behind.</param>
+	public static void DestroyS(bool leaveGameObject = false)
+	{
+		if (_instance == null) return;
+		if (!leaveGameObject)
+		{
+			Destroy(_instance.gameObject);
+		}
+		else
+		{
+			Destroy(_instance);
+			_instance.OnDestroy();
+		}
+	}
 
-    /// <summary>
-    /// Very Dangerous. Do not use if you don't know what you're doing.
-    /// </summary>
-    public void Reset()
-    {
-        GameObject obj = _Instance.gameObject;
-        Destroy(true);
-        Create(obj);
-    }
+	/// <summary>
+	/// Very Dangerous. Do not use if you don't know what you're doing.
+	/// </summary>
+	public void Reset(bool ResetWholeGameObject)
+	{
+		if (ResetWholeGameObject)
+		{
+			GameObject obj = _instance.gameObject;
+			DestroyS(true);
+			obj.AddComponent<T>();
+		}
+		else
+		{
+			DestroyS(false);
+			Get();
+		}
 
-    /// <summary>
-    /// Creates an instance of this singleton and attaches it to the desired Game Object.
-    /// </summary>
-    /// <param name="object"> The object you are attaching the singleton to.</param>
-    /// <param name="replace"> Whether or not this will forcibly replace an existing instance with the new one.</param>
-    public static void Create(GameObject @object, bool replace = false)
-    {
-        if (!replace)
-            if (instance != null) return;
-            else Destroy(true);
-        @object.AddComponent<T>().Awake();
-    }
+	}
+
+	/*
+
+	/// <summary>
+	/// Creates an instance of this singleton and attaches it to the desired Game Object.
+	/// </summary>
+	/// <param name="object"> The object you are attaching the singleton to.</param>
+	/// <param name="replace"> Whether or not this will forcibly replace an existing instance with the new one.</param>
+	public static T Create(GameObject @object, bool replace = false)
+	{
+		if (!replace)
+			if (_instance != null) return null;
+			else Destroy(true);
+		T result = @object.AddComponent<T>();
+		result.Awake();
+		return result;
+	}
+
+#if true
+	/// <summary>
+	/// Instantiates a prefab using the Addressables system. <br/>
+	/// Should be called by a public static void with a hard-coded path.
+	/// </summary>
+	/// <param name="path">The input path. Fill this with a hard-coded path provided by a publicly available wrapper function.</param>
+	protected static void InstantiateFromPath(string path, System.Action<T> response = null)
+	{
+		if (Get() != null) return;
+		Addressables.LoadAssetAsync<GameObject>(path).Completed +=
+		 (op) => {
+			 GameObject prefab = Instantiate(op.Result);
+			 T inst = prefab.GetComponent<T>();
+			 inst.Awake();
+			 response?.Invoke(inst);
+		 };
+	}
+#endif
+	 */
 
 }
