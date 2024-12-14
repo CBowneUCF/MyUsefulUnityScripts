@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -101,6 +102,16 @@ public static class MonoBehaviorHelpers
 		return result;
 	}
 
+    public static void Reset(this Transform transform, bool position = true, bool rotation = true, bool scale = true)
+    {
+        if (position) transform.localPosition = Vector3.zero;
+        if (rotation) transform.localRotation = Quaternion.identity;
+        if (scale) transform.localScale = Vector3.one;
+    }
+
+    public static T Random<T>(this T[] array) => array[UnityEngine.Random.Range(0, array.Length)];
+    public static T Random<T>(this List<T> array) => array[UnityEngine.Random.Range(0, array.Count)];
+    public static void RemoveAtLast<T>(this List<T> array, int i = 1) => array.Remove(array[^i]);
 
 }
 

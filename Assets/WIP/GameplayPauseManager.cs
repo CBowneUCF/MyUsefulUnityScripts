@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class GameplayPauseManager : Singleton<GameplayPauseManager>
 {
 
-    public static bool paused { get => instance._paused; private set => instance._paused = value; }
+    public static bool paused { get => Get()._paused; private set => Get()._paused = value; }
     private bool _paused;
     private List<Pauseable> pauseables = new();
 
@@ -17,20 +17,20 @@ public class GameplayPauseManager : Singleton<GameplayPauseManager>
 
     }
 
-    public static void SetPause(bool value) => instance._SetPause(value);
-    public static void Pause() => instance._SetPause(true);
-    public static void UnPause() => instance._SetPause(false);
-    public static void TogglePause() => instance._SetPause(!paused);
+    public static void SetPause(bool value) => Get()._SetPause(value);
+    public static void Pause() => Get()._SetPause(true);
+    public static void UnPause() => Get()._SetPause(false);
+    public static void TogglePause() => Get()._SetPause(!paused);
 
 
     public static void RegisterPausable(Pauseable pauseable)
     {
-        instance.pauseables.Add(pauseable);
+        Get().pauseables.Add(pauseable);
         pauseable.registered = true;
     }
     public static void UnRegisterPausable(Pauseable pauseable)
     {
-        instance.pauseables.Remove(pauseable);
+        Get().pauseables.Remove(pauseable);
         pauseable.registered = false;
     }
 

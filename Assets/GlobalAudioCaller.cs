@@ -1,7 +1,7 @@
 ﻿using AYellowpaper.SerializedCollections;
 using UnityEngine;
 
-public class GlobalAudioCaller : Singleton<GlobalAudioCaller>
+public class GlobalAudioCaller : SingletonAdvanced<GlobalAudioCaller>
 {
 	public new static GlobalAudioCaller Get() => InitCreate();
 	public new static bool TryGet(out GlobalAudioCaller output)
