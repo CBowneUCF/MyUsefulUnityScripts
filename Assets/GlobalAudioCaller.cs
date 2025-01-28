@@ -1,14 +1,8 @@
 ﻿using AYellowpaper.SerializedCollections;
 using UnityEngine;
 
-public class GlobalAudioCaller : SingletonAdvanced<GlobalAudioCaller>
+public class GlobalAudioCaller : MonoBehaviour, Singleton<GlobalAudioCaller>
 {
-	public new static GlobalAudioCaller Get() => InitCreate();
-	public new static bool TryGet(out GlobalAudioCaller output)
-	{
-		output = Get();
-		return output != null;
-	}
 
 	private AudioSource source;
 	private bool initialized;
@@ -16,7 +10,10 @@ public class GlobalAudioCaller : SingletonAdvanced<GlobalAudioCaller>
 	public SerializedDictionary<string, AudioClip> clips;
 
 
-	protected override void OnAwake() => Initialize();
+    private void Awake()
+    {
+		Initialize();
+    }
 
 	private void Initialize()
 	{

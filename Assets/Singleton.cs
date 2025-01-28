@@ -1,409 +1,212 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 /// <summary>
 /// A type of Behavior that can only exist once in a scene. <br/>
 /// Basic form that functions out of the box. (Inheret from SingletonAdvanced instead for special functionality.)
 /// </summary>
 /// <typeparam name="T">The Behavior's Type</typeparam>
-public abstract class Singleton<T> : SingletonAncestor where T : Singleton<T>
+public interface Singleton<T> : SingletonBase where T : UnityEngine.Object, Singleton<T>, new()
 {
-    #region Data and Setup
-
+    
     private static T _instance;
 
-    public static T Get() => InitFind();
-    public static T I => InitFind();
+    public delegate bool Delegate(out T Return);
+    protected static Delegate GetMethodP;
+
+    public static T Get() => InitialMethods.AttemptGet(GetMethodP);
     public static bool TryGet(out T output)
     {
-        output = InitFind();
+        output = InitialMethods.AttemptGet(GetMethodP);
         return output != null;
     }
-    public static bool IsActive(out T output)
+
+    public static bool Active => _instance != null;
+
+
+
+
+    public static class InitialMethods
     {
-        output = InitFind();
-        return output != null;
-    }
-    public static void Get(out T output)
-    {
-        output = InitFind();
-        if (output == null) throw new Exception("Singleton not active.");
-    }
 
-
-    public static bool Active;
-
-    #endregion
-
-    #region Initialization
-
-    protected static bool AttemptFind(out T result)
-    {
-        T findAttempt = FindFirstObjectByType<T>();
-        if (findAttempt)
+        public static T AttemptGet(Delegate secondMethod)
         {
-            result = findAttempt;
-            _instance = result;
+            #if UNITY_EDITOR
+            if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
+            #endif
+            if (_instance != null) return _instance;
 
-            _instance.OnAwake();
+            if (FindObject(out T attempt1))
+            {
+                attempt1.Initialize();
+                return _instance;
+            }
+            if (secondMethod != null && secondMethod.Invoke(out T attempt2))
+            {
+                attempt2.Initialize();
+                return _instance;
+            }
+            throw new Exception($"No Singleton of type {typeof(T)} could be found.");
+        }
+
+        /// <summary>
+        /// Most Basic Initialization Method. Simply attempts to find it in loaded scene or among loaded Scriptable Objects. <br />
+        /// Automatically run first before any other Initial Methods. <br />
+        /// </summary>
+        /// <param name="result"></param>
+        /// <returns>Success Value</returns>
+        public static bool FindObject(out T result)
+        {
+            T findAttempt = UnityEngine.Object.FindFirstObjectByType<T>(FindObjectsInactive.Include);
+            if (findAttempt != null)
+            {
+                result = findAttempt;
+                result.Initialize();
+                return true;
+            }
+            else
+            {
+                result = null;
+                return false;
+            }
+        }
+
+        public static bool Create(out T result)
+        {
+            if (typeof(MonoBehaviour).IsAssignableFrom(typeof(T)))
+            {
+                GameObject GO = new(typeof(T).ToString());
+                result = GO.AddComponent(typeof(T)) as T;
+                return true;
+            }
+            else if (typeof(ScriptableObject).IsAssignableFrom(typeof(T)))
+            {
+                result = ScriptableObject.CreateInstance(typeof(T)) as T;
+                return true;
+            }
+            result = null;
+            throw new Exception("Unable to create instance of Singleton for some reason.");
+        }
+
+
+        public static bool ResourcePrefabPath(out T result)
+        {
+            if (typeof(T).ImplementsOrDerives(typeof(Path)))
+            {
+                result = UnityEngine.Object.Instantiate(Resources.Load<T>((new T() as Path).Path));
+                return true;
+            }
+            else throw new Exception("This Singleton type doesn't have a path attached. Add SingletonPath Interface.");
+            throw new Exception("Unable to create instance of Singleton for some reason.");
+        }
+
+        public static bool SavedPrefab(out T result)
+        {
+            result = UnityEngine.Object.Instantiate(GlobalPrefabs.Singletons.FirstOrDefault(x => x is T) as T);
+            return true;
+
+        }
+
+        public static bool Preloaded(out T result)
+        {
+            result = UnityEngine.Object.Instantiate(Resources.FindObjectsOfTypeAll<T>()[0]);
             return true;
         }
-        else
-        {
-            result = null;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Simply Attempts to Find the Singleton in the current scene.
-    /// </summary>
-    /// <returns></returns>
-    protected static T InitFind()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
-#endif
-
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt))
-        {
-            attempt.GetComponent<T>().InitFinal();
-            return _instance;
-        }
-        else
-        {
-#if UNITY_EDITOR
-            Debug.LogError($"No Singleton of type {typeof(T)} could be found.");
-#endif
-            return null;
-        }
-    }
-
-    protected void InitFinal()
-    {
-        if (_instance || _instance == this) return;
-        _instance = this as T;
-        Active = true;
-        activeSingletons.Add(typeof(T), this);
-        if (DontDestoryOnLoad) DontDestroyOnLoad(_instance);
-        _instance.OnAwake();
-    }
-
-    protected static bool DontDestoryOnLoad = false;
-
-    #endregion
-
-    #region Other Functionality
-
-
-    /// <summary>
-    /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnAwake() instead.
-    /// </summary>
-    public void Awake()
-    {
-        if (_instance && _instance != this)
-        {
-#if UNITY_EDITOR
-            Debug.Log($"Second {typeof(T)} found, Destroying...");
-#endif
-
-            Destroy(this);
-        }
-        else
-        {
-            if (_instance == this) return;
-            (this as T).InitFinal(); ;
-        }
-    }
-
-    protected virtual void OnAwake() { }
-
-    /// <summary>
-    /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnDestroyed() instead.
-    /// </summary>
-    private void OnDestroy()
-    {
-        if (_instance == this)
-        {
-            _instance = null;
-            Active = false;
-            activeSingletons.Remove(typeof(T));
-        }
-        this.OnDestroyed();
-    }
-    protected virtual void OnDestroyed() { }
-
-    /// <summary>
-    /// Destroys the instance of this singleton, wherever it is.
-    /// </summary>
-    /// <param name="leaveGameObject"> Whether the Game Object that contains the Singleton is left behind.</param>
-    public static void DestroyS(bool leaveGameObject = false)
-    {
-        if (_instance == null) return;
-        if (!leaveGameObject)
-        {
-            Destroy(_instance.gameObject);
-        }
-        else
-        {
-            Destroy(_instance);
-            _instance.OnDestroy();
-        }
-    }
-
-    /// <summary>
-    /// Very Dangerous. Do not use if you don't know what you're doing.
-    /// </summary>
-    public void Reset(bool ResetWholeGameObject)
-    {
-        if (ResetWholeGameObject)
-        {
-            GameObject obj = _instance.gameObject;
-            DestroyS(true);
-            obj.AddComponent<T>();
-        }
-        else
-        {
-            DestroyS(false);
-            Get();
-        }
-
-    }
-
-    #endregion
-
-}
-
-/// <summary>
-/// A type of Behavior that can only exist once in a scene. <br/>
-/// Advanced form that can be customized with a static "Data" method. (See bottom of script file for examples.)
-/// </summary>
-/// <typeparam name="T">The Behavior's Type</typeparam>
-public abstract class SingletonAdvanced<T> : Singleton<SingletonAdvanced<T>> where T : SingletonAdvanced<T>
-{
-    #region Data and Setup
-
-    private static T _instance;
-
-    public new static T Get() => GetDel?.Invoke();
-    public new static T I => GetDel?.Invoke();
-    public static bool TryGet(out T output)
-    {
-        output = GetDel?.Invoke();
-        return output != null;
-    }
-    public static bool IsActive(out T output)
-    {
-        output = GetDel?.Invoke();
-        return output != null;
-    }
-    public static void Get(out T output)
-    {
-        output = InitFind();
-        if (output == null) throw new Exception("Singleton not active.");
-    }
-
-
-
-    public delegate T Delegate();
-    protected static Delegate GetDel = InitFind;
-
-    protected static void SetData(Delegate spawnMethod = null, bool dontDestroyOnLoad = false, bool spawnOnBoot = false, string path = null)
-    {
-        if (spawnMethod != null) GetDel = spawnMethod;
-        if (path != null) Path = path;
-        DontDestoryOnLoad = dontDestroyOnLoad;
-        if (spawnMethod == InitSavedPrefab)
-        {
-            SingletonAncestor S = GlobalPrefabs.Singletons.FirstOrDefault(x => x is T);
-            prefab = S
-                ? S.gameObject
-                : throw new Exception($"Singleton {typeof(T)} is set to use a saved prefab but isn't set up in the Global Prefabs Asset.");
-        }
-
-        if (spawnOnBoot) spawnMethod?.Invoke();
-    }
-    /// <summary>
-    /// Override to make this Singleton not destroy on load.
-    /// </summary>
-    protected static string Path = null;
-    protected static GameObject prefab;
-
-    #endregion
-
-    #region Initialization
-
-    protected static bool AttemptFind(out T result)
-    {
-        T findAttempt = FindFirstObjectByType<T>(FindObjectsInactive.Include);
-        if (findAttempt)
-        {
-            result = findAttempt;
-            _instance = result;
-
-            _instance.OnAwake();
-            return true;
-        }
-        else
-        {
-            result = null;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Simply Attempts to Find the Singleton in the current scene.
-    /// </summary>
-    /// <returns></returns>
-    protected new static T InitFind()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
-#endif
-
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt))
-        {
-            attempt.GetComponent<T>().InitFinal();
-            return _instance;
-        }
-
-#if UNITY_EDITOR
-        Debug.LogError($"No Singleton of type {typeof(T)} could be found.");
-#endif        
-        return null;
-    }
-
-    /// <summary>
-    /// Creates an instance of the Singleton from scratch.
-    /// </summary>
-    /// <returns></returns>
-    protected static T InitCreate()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
-#endif
-
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt)) return attempt;
-
-        GameObject GO = new(typeof(T).ToString());
-        T result = GO.AddComponent<T>();
-
-        result.GetComponent<T>().InitFinal();
-        return result;
-    }
-
-    /// <summary>
-    /// Instantiates a Prefab from the Resources folder. (Make sure to set the path in SetInfo.)
-    /// </summary>
-    /// <returns></returns>
-    protected static T InitResourcePrefab()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
-#endif
-
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt)) return attempt;
-
-        GameObject result = Instantiate(Resources.Load<GameObject>(Path));
-
-        result.GetComponent<T>().InitFinal();
-        return _instance;
-    }
-
-    /// <summary>
-    /// Instantiates a Prefab from the GlobalPrefabs ScriptableSingleton. (Make sure to place exactly one prefab into said Scriptable Object.)
-    /// </summary>
-    /// <returns></returns>
-    protected static T InitSavedPrefab()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
-#endif
-
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt)) return attempt;
-
-        if (!prefab)
-        {
-            Debug.LogError("");
-            return null;
-        }
-        GameObject result = Instantiate(prefab);
-
-        result.GetComponent<T>().InitFinal();
-        return _instance;
-    }
 
 #if UNITY_ADDRESSABLES_EXIST
-    /// <summary>
-    /// Instantiates a Prefab using the Addressables System. (Make sure to set the path in SetInfo.)
-    /// </summary>
-    /// <returns></returns>
-    protected static T InitAddressablePrefab()
-    {
-#if UNITY_EDITOR
-        if (!Application.isPlaying) { Debug.LogError($"{typeof(T)} accessed outside of runtime. Don't."); return null; }
+        /// <summary>
+        /// Instantiates a Prefab using the Addressables System. (Make sure to set the path in SetInfo.)
+        /// </summary>
+        /// <returns></returns>
+        public static bool AddressablePrefab(out T result)
+        {
+            //NOTE, NEEDS MORE ERROR PROOFING. ADD LATER.
+            result = UnityEngine.Object.Instantiate(UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(((new T() as Path).Path)).WaitForCompletion()) as T;
+            return true;
+        }
 #endif
 
-        if (_instance != null) return _instance;
-        if (AttemptFind(out T attempt)) return attempt;
 
-        GameObject result = Instantiate(UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(Path).WaitForCompletion());
 
-        InitFinal(result.GetComponent<T>());
-        return _instance;
     }
-#endif
 
-    #endregion
 
-    /// <summary>
-    /// This is the Unity Function which runs some code necessary for Singleton Function. Use OnDestroyed() instead.
-    /// </summary>
-    private void OnDestroy()
+
+
+
+
+
+
+
+    protected void Initialize()
+    {
+        if (_instance != null || _instance == this) return;
+        else if (_instance != null && _instance != this)
+        {
+            #if UNITY_EDITOR
+            Debug.Log($"Second {typeof(T)} found, Destroying...");
+            #endif
+
+            UnityEngine.Object.Destroy(this as T);
+        }
+        else
+        {
+            _instance = this as T;
+            OnInitialize();
+        }
+    }
+    protected virtual void OnInitialize() { }
+
+    protected void DeInitialize()
     {
         if (_instance == this)
         {
             _instance = null;
-            activeSingletons.Remove(typeof(T));
+            OnDeInitialize();
         }
-        this.OnDestroyed();
     }
+    protected virtual void OnDeInitialize() { }
 
+
+
+
+
+
+
+    public interface Path
+    {
+        public string Path => throw new NotImplementedException();
+    }
+     
 }
 
-
-public abstract class SingletonAncestor : MonoBehaviour
+public interface SingletonBase
 {
-    public static Dictionary<Type, SingletonAncestor> activeSingletons = new();
-    public static T Get<T>() where T : SingletonAncestor => activeSingletons[typeof(T)] as T;
-
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Boot()
     {
-#if UNITY_EDITOR
-        Debug.Log("Loading Singletons");
-#endif
-
-        Type[] types = typeof(SingletonAdvanced<>).GetAllChildTypes(false);
-
-        foreach (Type item in types)
+        Type[] types = typeof(Singleton<>).GetAllChildTypes(false);
+    
+        foreach (Type T in types)  
         {
-            MethodInfo M = item.GetMethod("Data", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod);
-            M?.Invoke(null, null);
+            if (T.IsInterface) continue;
 
+            FieldInfo I = T.GetField("GetMethod", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (I == null) continue;
+            FieldInfo P = T.GetInterfaces()
+                            .First(x => x.ImplementsOrDerives(typeof(Singleton<>)))
+                            .GetField("GetMethodP", BindingFlags.Static | BindingFlags.NonPublic);
+
+            P.SetValue(null, I.GetValue(null));
         }
     }
-
 }
 
 /* Example Use --------------------------------------------------------------------------------------------------------------------------------------------

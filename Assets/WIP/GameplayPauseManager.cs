@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class GameplayPauseManager : Singleton<GameplayPauseManager>
+public class GameplayPauseManager : MonoBehaviour, Singleton<GameplayPauseManager>
 {
+    public static GameplayPauseManager Get() => Singleton<GameplayPauseManager>.Get();
 
     public static bool paused { get => Get()._paused; private set => Get()._paused = value; }
     private bool _paused;
