@@ -14,14 +14,14 @@ public static class ExtensionMethods
 	public static int Int(this bool boolean) => boolean ? 1 : 0;
 	public static bool Bool(this int integral) => integral > 0;
 
-	public static Color SetRed(this ref Color color, float set) => color =			new Color(set,              color.g,           color.b,          color.a);
-	public static Color ChangeRed(this ref Color color, float change) => color =	new Color(color.r + change, color.g,           color.b,          color.a);
-	public static Color SetBlue(this ref Color color, float set) => color =			new Color(color.r,          set,			   color.b,          color.a);
-	public static Color ChangeBlue(this ref Color color, float change) => color =	new Color(color.r,          color.g + change,  color.b,          color.a);
-	public static Color SetGreen(this ref Color color, float set) => color =		new Color(color.r,          color.g,		   set,              color.a);
-	public static Color ChangeGreen(this ref Color color, float change) => color =	new Color(color.r,          color.g,           color.b + change, color.a);
-	public static Color SetAlpha(this ref Color color, float set) => color =		new Color(color.r,          color.g,           color.b,          set);
-	public static Color ChangeAlpha(this ref Color color, float change) => color =  new Color(color.r,          color.g,           color.b,          color.a + change);
+	public static Color SetRed(this ref Color color, float set) => new Color(set, color.g, color.b, color.a);
+	public static Color ChangeRed(this ref Color color, float change) => new Color(color.r + change, color.g, color.b, color.a);
+	public static Color SetBlue(this ref Color color, float set) => new Color(color.r, set, color.b, color.a);
+	public static Color ChangeBlue(this ref Color color, float change) => new Color(color.r, color.g + change,  color.b, color.a);
+	public static Color SetGreen(this ref Color color, float set) => new Color(color.r, color.g, set, color.a);
+	public static Color ChangeGreen(this ref Color color, float change) => new Color(color.r, color.g, color.b + change, color.a);
+	public static Color SetAlpha(this ref Color color, float set) => new Color(color.r, color.g, color.b, set);
+	public static Color ChangeAlpha(this ref Color color, float change) => new Color(color.r, color.g, color.b, color.a + change);
 
 
 }
@@ -55,28 +55,29 @@ public static class EasierMathExtensions
 	public static float Randomize(this float value, float min, float max) { value = UnityEngine.Random.Range(min, max); return value; }
 	public static int Randomize(this int value, int min, int max) { value = UnityEngine.Random.Range(min, max); return value; }
 
-	public static float RandomFrom(this float value, float min = 0) => UnityEngine.Random.Range(min, value);
-	public static int RandomFrom(this int value, int min = 0) => UnityEngine.Random.Range(min, value);
+	public static float RandomTo(this float value, float min = 0) => UnityEngine.Random.Range(min, value);
+	public static int RandomTo(this int value, int min = 0) => UnityEngine.Random.Range(min, value);
 
-	public static float RandomFrom(this Vector2 input) => UnityEngine.Random.Range(input.x, input.y);
-	public static int RandomFrom(this Vector2Int input) => UnityEngine.Random.Range(input.x, input.y);
+	public static float RandomBetween(this Vector2 input) => UnityEngine.Random.Range(input.x, input.y);
+	public static int RandomBetween(this Vector2Int input) => UnityEngine.Random.Range(input.x, input.y);
 
+	public static bool RandomChance(this float input) => UnityEngine.Random.Range(0f, 1f) >= input;
 
 }
 
 public static class MonoBehaviorHelpers
 {
-	public static void LateAwake(this MonoBehaviour m, Delegate result) => m.StartCoroutine(LateWakeENUM(result));
+	public static void LateAwake(this MonoBehaviour m, BasicDelegate result) => m.StartCoroutine(LateWakeENUM(result));
 	
-	static IEnumerator LateWakeENUM(Delegate result)
+	static IEnumerator LateWakeENUM(BasicDelegate result)
 	{
-		yield return WaitFor.EndOfFrame();
+		yield return new WaitForEndOfFrame();
 		result();
 	}
 
 	public static bool Unloading(this MonoBehaviour m) => m.gameObject.scene.isLoaded;
 
-	public static void SafeDestroyers(this MonoBehaviour m, Delegate SafeDestroy, Delegate UnloadDestroy)
+	public static void SafeDestroyers(this MonoBehaviour m, BasicDelegate SafeDestroy, BasicDelegate UnloadDestroy)
 	{
 		if (!m.gameObject.scene.isLoaded) SafeDestroy();
 		else UnloadDestroy();
@@ -102,17 +103,31 @@ public static class MonoBehaviorHelpers
 		return result;
 	}
 
-    public static void Reset(this Transform transform, bool position = true, bool rotation = true, bool scale = true)
-    {
-        if (position) transform.localPosition = Vector3.zero;
-        if (rotation) transform.localRotation = Quaternion.identity;
-        if (scale) transform.localScale = Vector3.one;
-    }
+	public static void Reset(this Transform transform, bool position = true, bool rotation = true, bool scale = true)
+	{
+		if (position) transform.localPosition = Vector3.zero;
+		if (rotation) transform.localRotation = Quaternion.identity;
+		if (scale) transform.localScale = Vector3.one;
+	}
 
-    public static T Random<T>(this T[] array) => array[UnityEngine.Random.Range(0, array.Length)];
-    public static T Random<T>(this List<T> array) => array[UnityEngine.Random.Range(0, array.Count)];
-    public static void RemoveAtLast<T>(this List<T> array, int i = 1) => array.Remove(array[^i]);
+	public static T Random<T>(this T[] array) => array[UnityEngine.Random.Range(0, array.Length)];
+	public static T Random<T>(this List<T> array) => array[UnityEngine.Random.Range(0, array.Count)];
+	public static void RemoveAtLast<T>(this List<T> array, int i = 1) => array.Remove(array[^i]);
 
+	public static T GetOrAddComponent<T>(this Component O) where T : Component
+	{
+		O.gameObject.TryGetComponent(out T V);
+		V ??= O.gameObject.AddComponent<T>();
+		return V;
+	}
+	public static T GetOrAddComponent<T>(this GameObject O) where T : Component
+	{
+		O.TryGetComponent(out T V);
+		V ??= O.AddComponent<T>();
+		return V;
+	}
+
+    public static void SetPositionAndRotation(this Transform target, Transform influence) => target.SetPositionAndRotation(influence.position, influence.rotation);
 }
 
-public delegate void Delegate();
+public delegate void BasicDelegate();

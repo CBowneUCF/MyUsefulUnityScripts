@@ -1,63 +1,72 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 // Coroutine+
-// By StarLightShadows
-// Based on "Taming Corountines" by aarthificial - https://youtu.be/TqfTFzWoljg
 // A customized, advanced form of Coroutine that keeps track of things about how it is running and has various other features.
 
 /// <summary>
 /// A customized, advanced Coroutine solution with various features for easier to write and more effective Coroutines. Use a constructor to create.
 /// </summary>
-public class Coroutine : IEnumerator
+public class CoroutinePlus : IEnumerator
 {
 
     #region Fields
 
-    /// <summary> Forces the next line of the Coroutine to run. Necessary to accomplish anything if the Coroutine was not given an owner. </summary>
-    public bool MoveNext() {
-        if(enumerator.MoveNext())begunRun();
+    /// <summary> 
+    /// Forces the next line of the Coroutine to run. Necessary to accomplish anything if the Coroutine was not given an owner. </summary>
+    public bool MoveNext()
+    {
+        if (enumerator.MoveNext()) begunRun();
         else finishedRun();
         return !enumerator.MoveNext();
-        }
-    /// <summary> I have no idea what this does. </summary>
+    }
+    /// <summary> 
+    /// I have no idea what this does. But it's necessary.</summary>
     public object Current { get; private set; }
-    /// <summary> This does not work. Just create a new one if you need to Reset. </summary>
-    public void Reset(){}
-    
-    /// <summary> Shows if the Coroutine is currently running automatically. </summary>
+    /// <summary> 
+    /// This does not work. Just create a new one if you need to Reset. </summary>
+    public void Reset() { }
+
+    /// <summary> 
+    /// Shows if the Coroutine is currently running automatically. </summary>
     public bool running { get; private set; }
-    /// <summary> Shows if the Coroutine has completed its tasks. </summary>
+    /// <summary> 
+    /// Shows if the Coroutine has completed its tasks. </summary>
     public bool complete { get; private set; }
-    /// <summary> Shows if the Coroutine is waiting to be activated via MoveNext(). </summary>
+    /// <summary> 
+    /// Shows if the Coroutine is waiting to be activated via MoveNext(). </summary>
     public bool waiting { get; private set; }
 
 
-    /// <summary> An Event that is called at the beginning of the Coroutine's tasks. </summary>
+    /// <summary> 
+    /// An Event that is called at the beginning of the Coroutine's tasks. </summary>
     public event System.Action OnBegin;
-    /// <summary> An Event that is called at the end of the Coroutine's tasks. </summary>
+    /// <summary> 
+    /// An Event that is called at the end of the Coroutine's tasks. </summary>
     public event System.Action OnFinish;
 
-    /// <summary> The MonoBehavior that owns the Coroutine. Necessary for automatic running. (Get Only) </summary>
-    public MonoBehaviour owner {get; private set;}
-    /// <summary> Returns the MonoBehavior that owns the Coroutine. Necessary for automatic running. </summary>
+    /// <summary> 
+    /// The MonoBehavior that owns the Coroutine. Necessary for automatic running. (Get Only) </summary>
+    public MonoBehaviour owner { get; private set; }
+    /// <summary> 
+    /// Returns the MonoBehavior that owns the Coroutine. Necessary for automatic running. </summary>
     public MonoBehaviour GetOwner() => owner;
 
-    /// <summary>The IEnumerator that dictates the code ran by this Coroutine.</summary>
-    public IEnumerator enumerator {get; private set;}
+    /// <summary>
+    /// The IEnumerator that dictates the code ran by this Coroutine. </summary>
+    public IEnumerator enumerator { get; private set; }
     private IEnumerator wrappedEnumerator;
 
-    /// <summary> Shows if the Coroutine was Stopped using StopAuto(). </summary>
-    public bool wasAutoStopped { get{return waiting && owner != null;}}
-    /// <summary> Returns true if the Coroutine has an owner. </summary>
+    /// <summary> 
+    /// Shows if the Coroutine was Stopped using StopAuto(). </summary>
+    public bool wasAutoStopped => waiting && owner != null;
+    /// <summary> 
+    /// Returns true if the Coroutine has an owner. </summary>
     public bool hasOwner => owner != null;
-    
+
     #endregion Fields
-    
-    
-    
-    
+
+
     #region Constrctors
 
     /// <summary>
@@ -65,12 +74,12 @@ public class Coroutine : IEnumerator
     /// </summary>
     /// <param name="enumerator">The IEnumerator that dictates the code ran by this Coroutine.</param>
     /// <param name="owner">The MonoBehavior that owns and runs the coroutine. Necessary for it to be automatic. Input Null to require activation via MoveNext().</param>
-    public Coroutine(IEnumerator enumerator, MonoBehaviour owner)
+    public CoroutinePlus(IEnumerator enumerator, MonoBehaviour owner)
     {
         this.owner = owner;
         this.enumerator = enumerator;
         wrappedEnumerator = Wrap(enumerator);
-        if(owner != null) BeginAuto(owner);
+        if (owner != null) BeginAuto(owner);
         else waiting = true;
     }
     /// <summary>
@@ -79,7 +88,7 @@ public class Coroutine : IEnumerator
     /// <param name="enumerator">The IEnumerator that dictates the code ran by this Coroutine.</param>
     /// <param name="automatic">Whether or not this coroutine runs automatically. Setting to true does not do anything unless owner is made non-null.</param>
     /// <param name="owner">The MonoBehavior that owns and runs the coroutine. Necessary for automatic running. Input Null to require activation via MoveNext().</param>
-    public Coroutine(IEnumerator enumerator, bool automatic, MonoBehaviour owner = null)
+    public CoroutinePlus(IEnumerator enumerator, bool automatic, MonoBehaviour owner = null)
     {
         this.owner = owner;
         this.enumerator = enumerator;
@@ -87,10 +96,10 @@ public class Coroutine : IEnumerator
         if (automatic && owner != null) BeginAuto(owner);
         else waiting = true;
     }
-    
+
     #endregion
-    
-    
+
+
 
     /// <summary>
     /// Begins a Coroutine's automatic running. (Does not work without an owner or if already running.)
@@ -98,10 +107,11 @@ public class Coroutine : IEnumerator
     ///<param name="owner">The MonoBehavior that owns and runs the coroutine. Use to replace the owner or give an owner to a Coroutine previously not given one.</param>
     public void BeginAuto(MonoBehaviour owner = null)
     {
-        if(running || complete || (this.owner == null && owner == null)) return;
-                
-        if(owner != null) this.owner = owner;
-        if(this.owner != null) {
+        if (running || complete || (this.owner == null && owner == null)) return;
+
+        if (owner != null) this.owner = owner;
+        if (this.owner != null)
+        {
             Current = this.owner.StartCoroutine(wrappedEnumerator = Wrap(this.enumerator));
         }
         running = true;
@@ -113,12 +123,12 @@ public class Coroutine : IEnumerator
     /// </summary>
     /// <param name="decouple">Decouples the Coroutine from its parent, making it impossible to begin automatic running without setting a new owner.</param>
     public void StopAuto(bool decouple = false)
-    {   
-        if(owner!=null) owner.StopCoroutine(enumerator);
+    {
+        if (owner != null) owner.StopCoroutine(enumerator);
         running = false;
         waiting = true;
-        if(decouple) owner = null;
-    }    
+        if (decouple) owner = null;
+    }
 
 
 
@@ -132,23 +142,41 @@ public class Coroutine : IEnumerator
 
     private bool begunRan;
     private bool finishedRan;
-    private void begunRun(){if(!begunRan){
-        OnBegin?.Invoke();
-    }}
-    private void finishedRun(){if(!finishedRan){
-        waiting = false;
-        running = false;
-        complete = true;
-        OnFinish?.Invoke();
-    }}
+    private void begunRun()
+    {
+        if (!begunRan)
+        {
+            OnBegin?.Invoke();
+        }
+    }
+    private void finishedRun()
+    {
+        if (!finishedRan)
+        {
+            waiting = false;
+            running = false;
+            complete = true;
+            OnFinish?.Invoke();
+        }
+    }
 
 
-    public static bool operator ==(Coroutine a, IEnumerator b) { return a.enumerator == b; }
-    public static bool operator !=(Coroutine a, IEnumerator b) { return a.enumerator != b; }
+    //public static bool operator ==(CoroutinePlus a, object b) => a == b;
+    //public static bool operator !=(CoroutinePlus a, object b) => a != b;
+    //public static bool operator ==(CoroutinePlus a, IEnumerator b) => a.enumerator == b;
+    //public static bool operator !=(CoroutinePlus a, IEnumerator b) => a.enumerator != b;
+    public static implicit operator bool(CoroutinePlus a) => a != null;
 
-    public override string ToString(){return base.ToString();}
-    public override bool Equals(object obj){return base.Equals(obj);}
-    public override int GetHashCode(){return base.GetHashCode();}
+    public override string ToString() => base.ToString();
+    public override bool Equals(object obj) => base.Equals(obj);
+    public override int GetHashCode() => base.GetHashCode();
+
+    /// <summary>
+    /// Whether the IEnumerator provided is equal to the one this Coroutine is currently using.
+    /// </summary>
+    /// <param name="compare">The IEnumerator to compare.</param>
+    /// <returns>True if equal.</returns>
+    public bool Uses(IEnumerator compare) => compare == wrappedEnumerator;
 }
 
 //Bonus!

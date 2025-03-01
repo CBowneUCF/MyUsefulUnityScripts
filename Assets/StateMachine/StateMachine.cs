@@ -3,7 +3,8 @@ using System;
 using System.Linq;
 using UnityEngine;
 using EditorAttributes;
-
+using AYellowpaper.SerializedCollections;
+using UltEvents;
 namespace SLS.StateMachineV3
 {
     /// <summary>
@@ -75,7 +76,9 @@ namespace SLS.StateMachineV3
                         System.Type type = item.GetType();
                         Component copy = gameObject.AddComponent(type);
 
+#if UNITY_EDITOR
                         UnityEditor.EditorUtility.CopySerialized(item, copy);
+#endif
                     }
                     for (int i = rootBehaviors.Length - 1; i >= 0; i--) DestroyImmediate(rootBehaviors[i]);
                     DestroyImmediate(badRootState);
@@ -90,7 +93,15 @@ namespace SLS.StateMachineV3
             stateHolder = root.transform;
         }
 
-        protected virtual void Update() => DoUpdate();
+        protected virtual void Update()
+        {
+            if (signalQueueDecay.running) signalQueueDecay.Tick(() =>
+            {
+                if (signalQueue.Count > 0) signalQueue.Dequeue();
+                if (signalQueue.Count > 0) signalQueueDecay.Begin();
+            });
+            DoUpdate();
+        }
 
         protected virtual void FixedUpdate() => DoFixedUpdate();
 
@@ -121,12 +132,12 @@ namespace SLS.StateMachineV3
             else SetupChildren(stateHolder);
 
             behaviors = GetComponents<StateBehavior>();
-            behaviors.DoInit(this);
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].InitializeP(this);
 
             DoAwake();
 
-            behaviors.DoEnter(null);
-            children[0].EnterState(null, true);
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnEnter(null, false);
+            currentState = children[0].EnterState(null, true);
 
             waitforMachineInit?.Invoke();
         }
@@ -137,13 +148,14 @@ namespace SLS.StateMachineV3
         public virtual void TransitionState(State nextState, State prevState)
         {
             // Pre Checks
-            if (nextState.locked ||
+            if (
+                nextState == null ||
+                nextState.locked ||
                 nextState == currentState ||
                 nextState == prevState ||
-                nextState == null ||
-                !prevState.active ||
                 prevState == null ||
-                prevState == this
+                prevState == this ||
+                !prevState.active
                ) return;
              
 
@@ -156,10 +168,50 @@ namespace SLS.StateMachineV3
             }
             for (; i < nextState.lineage.Length-1; i++)
                 nextState.lineage[i].EnterState(prevState, false);
-            nextState.EnterState(prevState);
-            currentState = nextState;
+            currentState = nextState.EnterState(prevState);
             nextState.onActivatedEvent?.Invoke(prevState);
         }
+
+
+        //Signals
+
+        [HideInEditMode, DisableInPlayMode] public bool signalReady = true;
+        public Queue<string> signalQueue = new();
+        public Timer.OneTime signalQueueDecay = new(1f);
+        public SerializedDictionary<string, UltEvent> globalSignals;
+
+        public bool SendSignal(string name, bool addToQueue = true, bool overrideReady = false)
+        {
+            if ((signalReady || overrideReady) && EnactSignal(name)) return true;
+            else if (addToQueue)
+            {
+                signalQueue.Enqueue(name);
+                if (signalQueueDecay.length > 0) signalQueueDecay.Begin();
+            }
+            return false;
+        }
+
+        public void ReadySignal()
+        {
+            signalReady = true;
+            while(signalQueue.Count > 0)
+                if (EnactSignal(signalQueue.Dequeue())) 
+                    break;
+        }
+
+        private bool EnactSignal(string name)
+        {
+            if (currentState.signals.TryGetValue(name, out UltEvent resultEvent) || globalSignals.TryGetValue(name, out resultEvent))
+            {
+                resultEvent?.Invoke();
+                return true;
+            }
+            return false;
+        }
+
+        public void FinishSignal() => SendSignal("Finish", addToQueue: false, overrideReady: true);
+
+
 
     }
 

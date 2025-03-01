@@ -2,12 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using S = Singleton<NewSingletonTest>;
 
-public class NewSingletonTest : MonoBehaviour, Singleton<NewSingletonTest>
+public class NewSingletonTest : MonoBehaviour, ISingleton<NewSingletonTest>
 {
-    public static NewSingletonTest Get() => S.Get();
-    public static bool TryGet(out NewSingletonTest result) => S.TryGet(out result);
+    private static NewSingletonTest _instance;
+    public static NewSingletonTest Get() => ISingleton<NewSingletonTest>.Get(ref _instance);
+    public static bool TryGet(out NewSingletonTest result) => ISingleton<NewSingletonTest>.TryGet(Get, out result);
 
-    protected static S.Delegate GetMethod = S.InitialMethods.Preloaded;
 }

@@ -1,7 +1,7 @@
 ﻿using AYellowpaper.SerializedCollections;
 using UnityEngine;
 
-public class GlobalAudioCaller : MonoBehaviour, Singleton<GlobalAudioCaller>
+public class GlobalAudioCaller : SingletonMonoBasic<GlobalAudioCaller>
 {
 
 	private AudioSource source;
@@ -10,12 +10,10 @@ public class GlobalAudioCaller : MonoBehaviour, Singleton<GlobalAudioCaller>
 	public SerializedDictionary<string, AudioClip> clips;
 
 
-    private void Awake()
-    {
-		Initialize();
-    }
 
-	private void Initialize()
+	protected override void OnInitialize() => Init();
+
+    void Init()
 	{
 		if (initialized) return;
 		source = GetComponent<AudioSource>();
@@ -28,7 +26,7 @@ public class GlobalAudioCaller : MonoBehaviour, Singleton<GlobalAudioCaller>
 
 	public void PlaySound(string name, float volume = 1, bool warn = true)
 	{
-		Initialize();
+        Init();
 
 		bool nameExists = clips.TryGetValue(name, out AudioClip clip);
 		if (!nameExists) { if (warn) Debug.LogWarningFormat("No sound with name {0} found on {1}.", name, gameObject); }
@@ -39,8 +37,8 @@ public class GlobalAudioCaller : MonoBehaviour, Singleton<GlobalAudioCaller>
 	public void PlaySound(string name) => PlaySound(name);
 	public void PlaySound(AudioClip clip, float volume = 1)
 	{
-		Initialize();
-		source.PlayOneShot(clip, volume);
+        Init();
+        source.PlayOneShot(clip, volume);
 	}
 
 }

@@ -1,13 +1,15 @@
 using UnityEngine;
-using UnityEngine.Events;
 using EditorAttributes;
 using System.Linq;
-using UnityEngine.EventSystems;
-using Unity.VisualScripting;
-using static UnityEditor.Experimental.GraphView.GraphView;
+using AYellowpaper.SerializedCollections;
+using UltEvents;
 
 namespace SLS.StateMachineV3
 {
+    //NOTE TO SELF: State Machine inheriting from State and thus gaining all of its State-specific data pieces is a pain in the butt. Look into fixing later with a shared Ancestor.
+    //NOTE TO SELF 2: Multi-Layered State Machines are similarly a Pain. Consider Version 4 where there's no layering but each State can be in a group.
+    //NOTE TO SELF 3: Maybe have "Previous State" as a saved reference in Machine in V4?
+
     /// <summary>
     /// The class for an individual State in the State Machine. I wouldn't recommend inheriting from this.
     /// </summary>
@@ -20,9 +22,12 @@ namespace SLS.StateMachineV3
         /// Acts as a separate state from children rather than automating to the first in the list. Only applicable if this State has child states. 
         /// </summary>
         [SerializeField, ShowField(nameof(__showSepFromChildren))] private bool separateFromChildren;
-        [SerializeField, HideField(nameof(__isMachine))] public UnityEvent<State> onActivatedEvent;
-        
+        [SerializeField, HideField(nameof(__isMachine))] public UltEvent<State> onActivatedEvent;
 
+        #region Signals
+        [SerializeField, HideField(nameof(__isMachine))] public SerializedDictionary<string, UltEvent> signals;
+        [SerializeField, HideField(nameof(__isMachine))] public bool lockReady;
+        #endregion 
 
         #region Buttons
 
@@ -79,6 +84,7 @@ namespace SLS.StateMachineV3
         protected virtual bool __showSepFromChildren => base.transform.childCount > 0 && __enableSiblingCreation;
         protected virtual bool __enableSiblingCreation => true;
         protected virtual bool __isMachine => false;
+        protected virtual bool __isntMachine => true;
 
 
         #endregion 
@@ -104,7 +110,7 @@ namespace SLS.StateMachineV3
             SetupChildren(transform);
 
             behaviors = GetComponents<StateBehavior>();
-            behaviors.DoInit(this);
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].InitializeP(this);
         }
 
         protected void SetupChildren(Transform parent)
@@ -121,44 +127,46 @@ namespace SLS.StateMachineV3
 
         public void DoAwake()
         {
-            behaviors.DoAwake();
-            children.DoAwake();
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnAwake();
+            for (int i = 0; i < children.Length; i++) children[i].DoAwake();
         }
 
         public void DoUpdate()
         {
-            behaviors.DoUpdate();
-            if (childCount>0 && activeChild) activeChild.DoUpdate();
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnUpdate();
+            if (childCount>0 && activeChild != null) activeChild.DoUpdate();
         }
         public void DoFixedUpdate()
         {
-            behaviors.DoFixedUpdate();
-            if (childCount > 0 && activeChild) activeChild.DoFixedUpdate();
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnFixedUpdate();
+            if (childCount > 0 && activeChild != null) activeChild.DoFixedUpdate(); 
         }
-        public void EnterState(State prev, bool specifically = true)
+        public State EnterState(State prev, bool specifically = true)
         {
             if(parent!=null) parent.activeChild = this;
             active = true;
+            base.gameObject.SetActive(true);
 
-            behaviors.DoEnter(prev);
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnEnter(prev, specifically && (childCount == 0 || separateFromChildren));
 
-            if (specifically && childCount>0 && !separateFromChildren)
+            if (specifically && childCount > 0 && !separateFromChildren)
             {
                 activeChild = children[0];
-                activeChild.EnterState(prev, specifically);
+                return activeChild.EnterState(prev, specifically);
             }
-                
-            base.gameObject.SetActive(true);
+            else machine.signalReady = !lockReady; 
+            return this;
         }
         public void ExitState(State next)
         {
             parent.activeChild = null;
             active = false;
-            behaviors.DoExit(next);
+            for (int i = 0; i < behaviors.Length; i++) behaviors[i].OnExit(next);
             base.gameObject.SetActive(false);
         }
 
         public void TransitionTo() => machine.TransitionState(this);
+
     }
 
     /// <summary>
@@ -173,8 +181,17 @@ namespace SLS.StateMachineV3
         /// Override with the "new" keyword with an expression like "=> M as MyStateMachine" to get a custom StateMachine
         /// </summary>
         public StateMachine M { get; private set; }
+        /// <summary>
+        /// An indirection to access the State Machine's gameObject property.
+        /// </summary>
         public new GameObject gameObject => M.gameObject;
+        /// <summary>
+        /// An indirection to access the State Machine's transform property.
+        /// </summary>
         public new Transform transform => M.transform;
+        /// <summary>
+        /// The current State. Usefull for referencing this SubObject.
+        /// </summary>
         public State state { get; private set; }
 
 
@@ -191,7 +208,7 @@ namespace SLS.StateMachineV3
         public virtual void OnAwake() { }
         public virtual void OnUpdate() { }
         public virtual void OnFixedUpdate() { }
-        public virtual void OnEnter(State prev) { }
+        public virtual void OnEnter(State prev, bool isFinal) { }
         public virtual void OnExit(State next) { }
 
         public C GetComponentFromMachine<C>() where C : Component => M.GetComponent<C>();
@@ -207,22 +224,6 @@ namespace SLS.StateMachineV3
 
     public static class _StateMachineExtMethods
     {
-        public static void DoAwake(this State[] states)
-        { for (int i = 0; i < states.Length; i++) states[i].DoAwake(); }
-
-        public static void DoInit(this StateBehavior[] beahviors, State This)
-        { for (int i = 0; i < beahviors.Length; i++) beahviors[i].InitializeP(This); }
-        public static void DoAwake(this StateBehavior[] beahviors)
-        { for (int i = 0; i < beahviors.Length; i++) beahviors[i].OnAwake(); }
-        public static void DoUpdate(this StateBehavior[] beahviors)
-        { for (int i = 0; i < beahviors.Length; i++) beahviors[i].OnUpdate(); }
-        public static void DoFixedUpdate(this StateBehavior[] beahviors)
-        { for (int i = 0; i < beahviors.Length; i++) beahviors[i].OnFixedUpdate(); }
-        public static void DoEnter(this StateBehavior[] states, State prev)
-        { for (int i = 0; i < states.Length; i++) states[i].OnEnter(prev); }
-        public static void DoExit(this StateBehavior[] states, State next)
-        { for (int i = 0; i < states.Length; i++) states[i].OnExit(next); }
-
         public static bool IsTopLayer(this State state) => state.layer == 0;
         public static bool ActiveMain(this State state) => state.machine.currentState == state;
         public static bool IsMachine(this State state) => state is StateMachine;
